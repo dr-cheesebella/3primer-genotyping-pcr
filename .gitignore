@@ -1,0 +1,25 @@
+# virtual environment
+.venv/
+
+# reference genomes (too large for git, and shouldn't be redistributed)
+genomes/
+
+# old Primer3 source/build folder (superseded by primer3-py, not part of this tool)
+primer3-main/
+
+# BLAST DB index files (auto-generated from genome fasta)
+*.nin
+*.nsq
+*.nhr
+*.ndb
+*.not
+*.ntf
+*.nto
+*.nos
+
+# python cache
+__pycache__/
+*.pyc
+
+# OS junk
+.DS_Store
