@@ -35,7 +35,7 @@ Optionally, it can also:
 ## What it's built on
 
 - [Primer3](https://github.com/primer3-org/primer3) — via the [`primer3-py`](https://github.com/libnano/primer3-py) Python bindings, for all Tm, GC%, self-complementarity, hairpin, and primer-dimer calculations (the same thermodynamic engine used by Primer3Plus and NCBI Primer-BLAST). No custom approximations are used.
-- [NCBI BLAST+](https://blast.ncbi.nlm.nih.gov/doc/blast-help/) (`blastn`, `makeblastdb`, `blastdbcmd`) — for optional genome-wide specificity checks and reference-genome flank extraction, run entirely locally against a reference FASTA you provide (e.g. GRCh37/hg19 or GRCh38/hg38).
+- [NCBI BLAST+](https://blast.ncbi.nlm.nih.gov/doc/blast-help/) (`blastn`, `makeblastdb`, `blastdbcmd`) — for optional genome-wide specificity checks and reference-genome flank extraction, run entirely locally against a reference FASTA you provide (human GRCh37/hg19 or GRCh38/hg38, or mouse GRCm38/mm10 or GRCm39/mm39).
 
 ## Setup
 
@@ -76,16 +76,27 @@ use.
 mkdir -p genomes
 cd genomes
 
-# GRCh38 / hg38
+# GRCh38 / hg38 (human)
 curl -O https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz
 gunzip GCF_000001405.40_GRCh38.p14_genomic.fna.gz
 
-# GRCh37 / hg19 (optional, only if you also need this build)
+# GRCh37 / hg19 (human, optional, only if you also need this build)
 curl -O https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.14_GRCh37.p13/GCA_000001405.14_GRCh37.p13_genomic.fna.gz
 gunzip GCA_000001405.14_GRCh37.p13_genomic.fna.gz
 
+# GRCm39 / mm39 (mouse, current/latest assembly -- optional, only if you work with mouse)
+curl -O https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_genomic.fna.gz
+gunzip GCF_000001635.27_GRCm39_genomic.fna.gz
+
+# GRCm38.p6 / mm10 (mouse, older assembly -- optional, kept alongside mm39 since a lot
+# of existing mouse data/annotations still use it, similar to hg19 vs hg38)
+curl -O https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.26_GRCm38.p6/GCF_000001635.26_GRCm38.p6_genomic.fna.gz
+gunzip GCF_000001635.26_GRCm38.p6_genomic.fna.gz
+
 cd ..
 ```
+
+Only download the builds you actually need — each is a multi-GB file.
 
 Your `genomes/` folder is ready. The BLAST index still needs to be built at
 some point (`makeblastdb`) — you just don't have to run that command
@@ -102,6 +113,8 @@ can run the exact same command manually:
 ```bash
 makeblastdb -in genomes/GCF_000001405.40_GRCh38.p14_genomic.fna -dbtype nucl -parse_seqids
 makeblastdb -in genomes/GCA_000001405.14_GRCh37.p13_genomic.fna -dbtype nucl -parse_seqids
+makeblastdb -in genomes/GCF_000001635.27_GRCm39_genomic.fna -dbtype nucl -parse_seqids
+makeblastdb -in genomes/GCF_000001635.26_GRCm38.p6_genomic.fna -dbtype nucl -parse_seqids
 ```
 
 ## Usage
@@ -123,7 +136,7 @@ designs = design_3primer_genotyping(
     product_min=200,
     product_max=1500,
     min_size_diff=500,
-    genome_build="hg38",   # or "hg19", "both"; pass genome_fastas=[] to skip off-target checking
+    genome_build="hg38",   # or "hg19", "both" (human); "mm10"/"mm39" (mouse); pass genome_fastas=[] to skip off-target checking
 )
 for i, d in enumerate(designs, 1):
     print_design(d, rank=i)

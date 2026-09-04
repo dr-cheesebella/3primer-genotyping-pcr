@@ -64,10 +64,11 @@ Genome-wide off-target (specificity) check (optional):
     a primer also binds elsewhere in the genome (that's what NCBI Primer-BLAST does
     on top of primer3). To do this locally you need:
         1) NCBI BLAST+ installed (Mac: `brew install blast`)
-        2) genome fasta files ready (by default this looks in the genomes/ subfolder
-           next to this script for
-           GCF_000001405.40_GRCh38.p14_genomic.fna (hg38) and
-           GCA_000001405.14_GRCh37.p13_genomic.fna (hg19))
+        2) genome fasta files ready (by default this auto-discovers, in the genomes/
+           subfolder next to this script, GCF_000001405.40_GRCh38.p14_genomic.fna
+           (hg38) and GCA_000001405.14_GRCh37.p13_genomic.fna (hg19); mouse builds
+           mm10/GCF_000001635.26_GRCm38.p6 and mm39/GCF_000001635.27_GRCm39 are also
+           supported via genome_build="mm10"/"mm39" but are never auto-discovered)
     With both of these in place, design_3primer_genotyping() automatically aligns
     every candidate primer against the genome with blastn (-task blastn-short), and
     discards any candidate with 2 or more near-perfect hits (= suspected off-target).
@@ -112,6 +113,8 @@ DEFAULT_GENOME_FASTAS = [
     os.path.join(BASE_DIR, "genomes", "GCF_000001405.40_GRCh38.p14_genomic.fna"),  # hg38 / GRCh38
     os.path.join(BASE_DIR, "genomes", "GCA_000001405.14_GRCh37.p13_genomic.fna"),  # hg19 / GRCh37
 ]
+# Note: this auto-discovery default is human-only (hg38 + hg19). Mouse builds
+# are never auto-included -- pass genome_build="mm10"/"mm39" explicitly.
 
 # Passing a short name like genome_build="hg19" resolves to the actual file path
 # through this mapping.
@@ -120,12 +123,22 @@ GENOME_BUILD_PATHS = {
     "grch38": os.path.join(BASE_DIR, "genomes", "GCF_000001405.40_GRCh38.p14_genomic.fna"),
     "hg19": os.path.join(BASE_DIR, "genomes", "GCA_000001405.14_GRCh37.p13_genomic.fna"),
     "grch37": os.path.join(BASE_DIR, "genomes", "GCA_000001405.14_GRCh37.p13_genomic.fna"),
+    # Mouse. Note mm10/GRCm38 (2011) is NOT the current assembly -- mm39/GRCm39
+    # (2020) is the latest -- but mm10 is kept alongside it since a lot of
+    # existing mouse data/annotations still use it.
+    "mm39": os.path.join(BASE_DIR, "genomes", "GCF_000001635.27_GRCm39_genomic.fna"),
+    "grcm39": os.path.join(BASE_DIR, "genomes", "GCF_000001635.27_GRCm39_genomic.fna"),
+    "mm10": os.path.join(BASE_DIR, "genomes", "GCF_000001635.26_GRCm38.p6_genomic.fna"),
+    "grcm38": os.path.join(BASE_DIR, "genomes", "GCF_000001635.26_GRCm38.p6_genomic.fna"),
 }
 
 
 def resolve_genome_build(genome_build):
-    """'hg19' / 'hg38' / 'grch37' / 'grch38' / 'both' (case-insensitive) -> list of
-    genome fasta paths.
+    """'hg19' / 'hg38' / 'grch37' / 'grch38' / 'mm10' / 'mm39' / 'grcm38' /
+    'grcm39' / 'both' (case-insensitive) -> list of genome fasta paths.
+
+    Note: 'both' only combines the two *human* builds (hg38 + hg19) -- it does
+    not pull in mouse. Specify 'mm10'/'mm39' individually for mouse.
 
     Raises:
         ValueError: unknown build name, or the corresponding genome fasta file
@@ -145,7 +158,8 @@ def resolve_genome_build(genome_build):
     else:
         raise ValueError(
             f"genome_build={genome_build!r}: unrecognized value. "
-            f"Use one of 'hg19', 'hg38', 'grch37', 'grch38', 'both'."
+            f"Use one of 'hg19', 'hg38', 'grch37', 'grch38', 'mm10', 'mm39', "
+            f"'grcm38', 'grcm39', 'both' (human hg38+hg19 only)."
         )
 
     missing = [p for p in paths if not os.path.isfile(p)]
